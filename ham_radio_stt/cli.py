@@ -30,6 +30,10 @@ def _setup_logging(level: str) -> None:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         stream=sys.stderr,
     )
+    # Ensure huggingface_hub download progress bars are visible
+    # (they use tqdm which writes to stderr, but logging gates them)
+    hf_logger = logging.getLogger("huggingface_hub")
+    hf_logger.setLevel(logging.INFO)
 
 
 def _build_config(args: argparse.Namespace):
