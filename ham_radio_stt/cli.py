@@ -71,16 +71,13 @@ def _cmd_file(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        result = pipeline.transcribe_file(str(path))
-        result.segment_index = 0
-        result.offset_s = 0.0
-        result.is_final = True
-
-        if use_json:
-            print(format_json_line(result), flush=True)
-        else:
-            print(result.text)
-
+        for result in pipeline.transcribe_file_progressive(str(path)):
+            if use_json:
+                print(format_json_line(result), flush=True)
+            else:
+                # Human mode: always print text. JSON consumers use is_valid to filter.
+                if result.text.strip():
+                    print(result.text, flush=True)
     except ham_radio_stt.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), type(e).__name__.upper()), flush=True)
