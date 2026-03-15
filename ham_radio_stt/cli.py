@@ -47,10 +47,17 @@ def _build_config(args: argparse.Namespace):
     return load_config(config_file=config_path, cli_overrides=cli_overrides or None)
 
 
+def _status(msg: str, use_json: bool) -> None:
+    """Print a status message to stderr (unless in JSON mode, keep stderr clean too)."""
+    if not use_json:
+        print(msg, file=sys.stderr, flush=True)
+
+
 def _cmd_file(args: argparse.Namespace) -> int:
     config = _build_config(args)
     use_json = getattr(args, "json", False)
 
+    _status(f"Loading model: {config.whisper_model} (this may download ~1.5GB on first run)...", use_json)
     try:
         from ham_radio_stt.pipeline import Pipeline
         pipeline = Pipeline(config)
@@ -61,6 +68,8 @@ def _cmd_file(args: argparse.Namespace) -> int:
             print(f"Error: {e}", file=sys.stderr)
         return _exit_code_for(e)
 
+    _status("Model loaded.", use_json)
+
     path = Path(args.path)
     if not path.exists():
         msg = f"File not found: {path}"
@@ -70,6 +79,7 @@ def _cmd_file(args: argparse.Namespace) -> int:
             print(f"Error: {msg}", file=sys.stderr)
         return 1
 
+    _status(f"Processing: {path.name}", use_json)
     try:
         for result in pipeline.transcribe_file_progressive(str(path)):
             if use_json:
@@ -92,6 +102,7 @@ def _cmd_stream(args: argparse.Namespace) -> int:
     config = _build_config(args)
     use_json = getattr(args, "json", False)
 
+    _status(f"Loading model: {config.whisper_model} (this may download ~1.5GB on first run)...", use_json)
     try:
         from ham_radio_stt.pipeline import Pipeline
         from ham_radio_stt.streaming import StreamingSession
@@ -102,6 +113,8 @@ def _cmd_stream(args: argparse.Namespace) -> int:
         else:
             print(f"Error: {e}", file=sys.stderr)
         return _exit_code_for(e)
+
+    _status("Model loaded. Starting stream (Ctrl+C to stop)...", use_json)
 
     def on_result(result: TranscriptionResult) -> None:
         if use_json:
