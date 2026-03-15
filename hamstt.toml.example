@@ -1,0 +1,36 @@
+# Ham Radio STT Configuration
+# Copy to ./hamstt.toml or ~/.config/hamstt/config.toml
+
+[whisper]
+model = "distil-large-v3"       # Options: distil-large-v3, large-v3-turbo, medium, small, base, tiny
+language = "en"
+beam_size = 5
+best_of = 5
+temperature = 0.0               # 0 = deterministic, reduces hallucination
+compute_type = "int8"            # int8 is fastest on CPU
+device = "cpu"
+initial_prompt = "Ham radio communication. CQ de W1AW, 73, QSL, QRM, QRN, QSB, QTH, over, copy, roger."
+
+[denoiser]
+name = "none"                    # Options: none, deepfilter
+
+[sox]
+highpass_hz = 200                # Ham voice starts ~300Hz, be conservative
+lowpass_hz = 3400                # SSB/AM upper cutoff
+norm_level_db = -3.0
+
+[vad]
+filter = true
+min_silence_duration_ms = 500
+speech_pad_ms = 200
+
+[streaming]
+chunk_duration_s = 0.5
+buffer_duration_s = 30.0
+silence_timeout_s = 1.5
+sample_rate = 44100
+# input_device = 2              # Uncomment and set to specific device index
+
+[deepfilter]
+attenuation_limit = 100.0       # dB, max noise attenuation
+post_filter = true              # Slight over-attenuation of very noisy sections

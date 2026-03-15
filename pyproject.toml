@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ham-radio-stt"
+version = "0.1.0"
+description = "CLI speech-to-text for ham radio audio — offline, pluggable, fast"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "faster-whisper>=1.0.0",
+    "soundfile>=0.12.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+deepfilter = [
+    "deepfilternet>=0.5.0",
+    "scipy>=1.10.0",
+]
+stream = [
+    "sounddevice>=0.4.6",
+]
+all = [
+    "ham-radio-stt[deepfilter,stream]",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[project.scripts]
+ham-radio-stt = "ham_radio_stt.cli:main"
