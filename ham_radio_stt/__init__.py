@@ -21,3 +21,18 @@ class StreamError(HamSTTError):
 
 class ConfigError(HamSTTError):
     """Bad TOML config or invalid parameter values."""
+
+
+from ham_radio_stt.config import PipelineConfig
+from ham_radio_stt.result import TranscriptionResult
+
+__all__ = [
+    "__version__",
+    "PipelineConfig",
+    "TranscriptionResult",
+    "HamSTTError",
+    "AudioProcessingError",
+    "ModelLoadError",
+    "StreamError",
+    "ConfigError",
+]
