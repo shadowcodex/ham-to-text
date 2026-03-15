@@ -13,6 +13,7 @@ Offline speech-to-text for ham radio audio. Processes pre-recorded files and liv
 ## Requirements
 
 - Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - [SoX](http://sox.sourceforge.net/) installed and on PATH
 
 ### Install SoX
@@ -32,16 +33,16 @@ choco install sox
 
 ```bash
 # Core (file transcription)
-pip install ham-radio-stt
+uv pip install ham-radio-stt
 
 # With live streaming support
-pip install ham-radio-stt[stream]
+uv pip install "ham-radio-stt[stream]"
 
 # With DeepFilterNet 3 denoiser
-pip install ham-radio-stt[deepfilter]
+uv pip install "ham-radio-stt[deepfilter]"
 
 # Everything
-pip install ham-radio-stt[all]
+uv pip install "ham-radio-stt[all]"
 ```
 
 ## Usage
@@ -82,8 +83,9 @@ Output is newline-delimited JSON (JSONL). Each line has a `"type"` field:
 ## Development
 
 ```bash
-pip install -e ".[dev,all]"
+uv pip install -e ".[dev,all]"
 pytest                                    # fast tests
 pytest -m slow                            # include model-loading tests
-pytest --audio-file recording.wav         # test with real audio
+pytest -m requires_sox                    # include SoX integration tests
+pytest --audio-file recording.wav         # test with real audio files
 ```
