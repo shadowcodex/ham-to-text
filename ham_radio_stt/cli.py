@@ -24,16 +24,51 @@ def format_error_json(error: str, code: str) -> str:
     return json.dumps({"type": "error", "error": error, "code": code})
 
 
+def _load_dotenv() -> None:
+    """Load .env file from current directory if it exists. No dependencies needed."""
+    import os
+    env_path = Path(".env")
+    if not env_path.exists():
+        return
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip("\"'")
+            os.environ.setdefault(key, value)
+
+
 def _setup_logging(level: str) -> None:
-    logging.basicConfig(
-        level=getattr(logging, level.upper(), logging.WARNING),
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        stream=sys.stderr,
-    )
-    # Ensure huggingface_hub download progress bars are visible
-    # (they use tqdm which writes to stderr, but logging gates them)
-    hf_logger = logging.getLogger("huggingface_hub")
-    hf_logger.setLevel(logging.INFO)
+    import os
+
+    log_level = getattr(logging, level.upper(), logging.WARNING)
+
+    # Force configuration even if root logger already has handlers
+    root = logging.getLogger()
+    root.setLevel(log_level)
+    if not root.handlers:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+        root.addHandler(handler)
+    else:
+        for handler in root.handlers:
+            handler.setLevel(log_level)
+
+    # Set our own logger explicitly
+    ham_logger = logging.getLogger("ham_radio_stt")
+    ham_logger.setLevel(log_level)
+
+    # Force huggingface_hub download progress bars to show
+    os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "0")
+    try:
+        import huggingface_hub
+        huggingface_hub.utils.logging.set_verbosity_info()
+        huggingface_hub.utils.logging.enable_progress_bars()
+    except (ImportError, AttributeError):
+        pass
 
 
 def _build_config(args: argparse.Namespace):
@@ -183,6 +218,8 @@ def _exit_code_for(error: Exception) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _load_dotenv()
+
     parser = argparse.ArgumentParser(
         prog="ham-radio-stt",
         description="Offline speech-to-text for ham radio audio",

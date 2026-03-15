@@ -41,6 +41,7 @@ models/
 
 # Config (user-specific)
 hamstt.toml
+.env
 
 # Custom
 data/
