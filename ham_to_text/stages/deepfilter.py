@@ -35,6 +35,7 @@ try:
                 down = sample_rate // g
                 audio = resample_poly(audio, up, down).astype(np.float32)
 
+            self._df_state.reset()
             audio_tensor = torch.from_numpy(audio).unsqueeze(0)
             enhanced = enhance(
                 self._model,

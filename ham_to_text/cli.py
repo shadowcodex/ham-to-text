@@ -79,6 +79,8 @@ def _build_config(args: argparse.Namespace):
         cli_overrides["denoiser"] = args.denoiser
     if hasattr(args, "device") and args.device is not None:
         cli_overrides["stream_input_device"] = args.device
+    if hasattr(args, "debug_audio") and args.debug_audio is not None:
+        cli_overrides["debug_audio_dir"] = args.debug_audio
 
     config_file = getattr(args, "config", None)
     config_path = Path(config_file) if config_file else None
@@ -235,6 +237,7 @@ def main(argv: list[str] | None = None) -> int:
     file_parser.add_argument("--model", help="Whisper model name")
     file_parser.add_argument("--denoiser", help="Denoiser name")
     file_parser.add_argument("--config", help="Path to TOML config file")
+    file_parser.add_argument("--debug-audio", metavar="DIR", help="Save intermediate audio to DIR")
 
     stream_parser = subparsers.add_parser("stream", help="Stream from audio device")
     stream_parser.add_argument("--json", action="store_true", help="Output as JSONL")
@@ -242,6 +245,7 @@ def main(argv: list[str] | None = None) -> int:
     stream_parser.add_argument("--model", help="Whisper model name")
     stream_parser.add_argument("--denoiser", help="Denoiser name")
     stream_parser.add_argument("--config", help="Path to TOML config file")
+    stream_parser.add_argument("--debug-audio", metavar="DIR", help="Save intermediate audio to DIR")
 
     devices_parser = subparsers.add_parser("devices", help="List audio devices")
     devices_parser.add_argument("--json", action="store_true", help="Output as JSON")

@@ -1,12 +1,16 @@
 # Ham to Text
 
-Offline speech-to-text for ham radio audio. Processes pre-recorded files and live audio streams, emitting progressive JSON output.
+Offline speech-to-text for ham radio and MARS (Military Auxiliary Radio System) audio. Processes pre-recorded files and live audio streams, optimized for narrowband HF SSB voice.
 
 ## Features
 
 - Fully offline — no cloud dependencies
 - Progressive JSON streaming output (JSONL)
-- Pluggable denoiser pipeline (DeepFilterNet 3 optional)
+- Optimized for narrowband ham/MARS radio audio (8kHz-16kHz SSB)
+- WebRTC VAD with energy-based fallback for reliable speech detection
+- Optional spectral gating denoiser (noisereduce)
+- SoX preprocessing with configurable EQ, bandpass, and compression
+- Conversational context carries between segments for better accuracy
 - Cross-platform: macOS, Windows, Linux
 - Configurable via TOML files or CLI flags
 
@@ -40,6 +44,9 @@ cd ham-to-text
 # Transcribe a file
 uv run ham-to-text file audio.wav
 
+# With noisereduce denoiser (recommended)
+uv run --extra noisereduce ham-to-text file audio.wav --denoiser noisereduce
+
 # Transcribe with JSON output
 uv run ham-to-text file audio.wav --json
 
@@ -56,14 +63,28 @@ uv run ham-to-text file audio.wav --model small
 ### Optional Extras
 
 ```bash
+# With noisereduce denoiser (recommended for ham/MARS audio)
+uv run --extra noisereduce ham-to-text file audio.wav --denoiser noisereduce
+
 # With live streaming support
 uv run --extra stream ham-to-text stream
 
-# With DeepFilterNet 3 denoiser
-uv run --extra deepfilter ham-to-text file audio.wav --denoiser deepfilter
-
 # With all extras
 uv run --extra all ham-to-text file audio.wav
+```
+
+## Denoisers
+
+| Denoiser | Install | Best For |
+|----------|---------|----------|
+| `none` | Built-in | Clean signals, no processing needed |
+| `noisereduce` | `--extra noisereduce` | **Recommended.** Narrowband ham/MARS audio (8-16kHz). Spectral gating, lightweight |
+| `deepfilter` | `--extra deepfilter` | Wideband (48kHz) speech. Not recommended for narrowband radio audio |
+
+Set the denoiser via CLI flag or config:
+
+```bash
+uv run --extra noisereduce ham-to-text file audio.wav --denoiser noisereduce
 ```
 
 ## Whisper Models
@@ -102,24 +123,35 @@ best_of = 5
 temperature = 0.0
 compute_type = "int8"        # "int8", "float16", "float32"
 device = "cpu"               # "cpu" or "cuda"
-initial_prompt = "Ham radio communication. CQ de W1AW, 73, QSL..."
+context_segments = 5         # Prior segments fed as context (0 to disable)
+
+[denoiser]
+name = "noisereduce"         # "none", "noisereduce", or "deepfilter"
+
+[noisereduce]
+stationary = false           # false = non-stationary mode (better for varying radio noise)
+prop_decrease = 0.75         # Noise reduction strength (0.0-1.0)
+n_fft = 512                  # FFT size
+time_constant_s = 2.0        # Smoothing window
 
 [sox]
 highpass_hz = 200            # High-pass filter cutoff
 lowpass_hz = 3400            # Low-pass filter cutoff
+eq_center_hz = 1800          # Clarity EQ center frequency (0 boost to disable)
+eq_boost_db = 6.0            # Clarity EQ boost in dB
 norm_level_db = -3.0         # Normalization level
 
 [vad]
 filter = true                # Enable voice activity detection
-min_silence_duration_ms = 500
-speech_pad_ms = 200
-
-[denoiser]
-name = "none"                # "none" or "deepfilter"
+aggressiveness = 0           # 0 = least aggressive (more speech), 3 = most aggressive
+frame_ms = 30                # Frame size: 10, 20, or 30 ms
+min_silence_ms = 300         # Min silence to split segments
+speech_pad_ms = 300          # Padding around speech segments
+energy_threshold = 0.02      # RMS threshold for energy-based gap recovery
 
 [deepfilter]
-attenuation_limit = 100.0
-post_filter = true
+attenuation_limit = 80.0     # Max noise suppression in dB
+post_filter = true           # Extra suppression of noisy bins
 
 [streaming]
 chunk_duration_s = 0.5
@@ -134,6 +166,27 @@ You can also point to a specific config file:
 ```bash
 uv run ham-to-text file audio.wav --config my-config.toml
 ```
+
+## Debugging Audio Stages
+
+Use `--debug-audio` to save intermediate WAV files after each pipeline stage:
+
+```bash
+uv run --extra noisereduce ham-to-text file audio.wav --denoiser noisereduce --debug-audio /tmp/debug
+```
+
+This produces:
+
+```
+/tmp/debug/
+├── 00_input.wav                  # Raw input audio
+├── 01_sox_preprocess.wav         # After bandpass/EQ/compand/normalize
+├── 02_noisereduce_seg000.wav     # After denoiser (per VAD segment)
+├── 02_noisereduce_seg001.wav
+└── ...
+```
+
+See [docs/audio-processing-guide.md](docs/audio-processing-guide.md) for detailed tuning guidance.
 
 ## JSON Output Format
 

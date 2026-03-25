@@ -54,6 +54,15 @@ class SoxPreprocess:
                 output_tmp.name,
                 "highpass", str(cfg.sox_highpass_hz),
                 "lowpass", str(cfg.sox_lowpass_hz),
+            ]
+
+            if cfg.sox_eq_boost_db != 0:
+                cmd += [
+                    "equalizer", str(cfg.sox_eq_center_hz), "1.5q",
+                    str(cfg.sox_eq_boost_db),
+                ]
+
+            cmd += [
                 "compand", "0.01,0.2",
                 "-60,-60,-30,-10,0,-3",
                 "-3", "-60", "0.1",

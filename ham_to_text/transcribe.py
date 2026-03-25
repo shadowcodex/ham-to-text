@@ -36,9 +36,16 @@ class WhisperTranscriber:
         audio: np.ndarray,
         sample_rate: int,
         audio_source: str,
+        prior_text: str = "",
     ) -> TranscriptionResult:
         cfg = self._config
         start = time.monotonic()
+
+        # Append recent transcript context to the initial prompt so Whisper
+        # maintains conversational relevance across segments.
+        prompt = cfg.whisper_initial_prompt
+        if prior_text:
+            prompt = f"{prompt} {prior_text}"
 
         segments_gen, info = self._model.transcribe(
             audio,
@@ -46,12 +53,8 @@ class WhisperTranscriber:
             beam_size=cfg.whisper_beam_size,
             best_of=cfg.whisper_best_of,
             temperature=cfg.whisper_temperature,
-            initial_prompt=cfg.whisper_initial_prompt,
-            vad_filter=cfg.vad_filter,
-            vad_parameters=dict(
-                min_silence_duration_ms=cfg.vad_min_silence_duration_ms,
-                speech_pad_ms=cfg.vad_speech_pad_ms,
-            ),
+            initial_prompt=prompt,
+            vad_filter=False,
             condition_on_previous_text=False,
             log_prob_threshold=-1.0,
             no_speech_threshold=0.6,
