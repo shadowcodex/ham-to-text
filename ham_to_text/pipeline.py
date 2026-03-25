@@ -9,12 +9,12 @@ from typing import Generator
 import numpy as np
 import soundfile as sf
 
-from ham_radio_stt import AudioProcessingError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
-from ham_radio_stt.stages.sox_preprocess import SoxPreprocess
-from ham_radio_stt.stages.denoise import get_denoiser
-from ham_radio_stt.transcribe import WhisperTranscriber
+from ham_to_text import AudioProcessingError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
+from ham_to_text.stages.sox_preprocess import SoxPreprocess
+from ham_to_text.stages.denoise import get_denoiser
+from ham_to_text.transcribe import WhisperTranscriber
 
 logger = logging.getLogger(__name__)
 

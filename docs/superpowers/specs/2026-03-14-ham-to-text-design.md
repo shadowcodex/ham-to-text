@@ -105,14 +105,14 @@ except ImportError:
 ```
 
 If a user requests a denoiser that isn't installed, they get:
-`"Denoiser 'deepfilter' requires: pip install ham-radio-stt[deepfilter]"`
+`"Denoiser 'deepfilter' requires: pip install ham-to-text[deepfilter]"`
 
 ---
 
 ## 3. Project Structure
 
 ```
-ham_radio_stt/
+ham_to_text/
 ├── __init__.py              # exports: public API, exceptions
 ├── config.py                # PipelineConfig dataclass, TOML loading, config layering
 ├── pipeline.py              # Pipeline class — composes stages, runs them
@@ -125,7 +125,7 @@ ham_radio_stt/
 ├── result.py                # TranscriptionResult dataclass
 ├── streaming.py             # StreamingSession — capture thread + flush logic
 ├── cli.py                   # argparse CLI, JSON streaming output
-└── __main__.py              # python -m ham_radio_stt entry point
+└── __main__.py              # python -m ham_to_text entry point
 
 tests/
 ├── test_stages.py           # unit tests for each stage in isolation
@@ -153,13 +153,13 @@ Standard `pyproject.toml` with optional extras and a console script entry point:
 
 ```toml
 [project.scripts]
-ham-radio-stt = "ham_radio_stt.cli:main"
+ham-to-text = "ham_to_text.cli:main"
 ```
 
-- `pip install ham-radio-stt` — core (SoX + faster-whisper)
-- `pip install ham-radio-stt[deepfilter]` — adds DeepFilterNet 3 + PyTorch
-- `pip install ham-radio-stt[stream]` — adds sounddevice for live capture
-- `pip install ham-radio-stt[all]` — everything
+- `pip install ham-to-text` — core (SoX + faster-whisper)
+- `pip install ham-to-text[deepfilter]` — adds DeepFilterNet 3 + PyTorch
+- `pip install ham-to-text[stream]` — adds sounddevice for live capture
+- `pip install ham-to-text[all]` — everything
 
 ---
 
@@ -264,24 +264,24 @@ post_filter = false      # -> dfn_post_filter
 
 ```bash
 # Transcribe a file (progressive output)
-ham-radio-stt file audio.wav
-ham-radio-stt file audio.wav --json
+ham-to-text file audio.wav
+ham-to-text file audio.wav --json
 
 # Stream from default audio device
-ham-radio-stt stream
-ham-radio-stt stream --json
-ham-radio-stt stream --device 2 --json
+ham-to-text stream
+ham-to-text stream --json
+ham-to-text stream --device 2 --json
 
 # List audio devices
-ham-radio-stt devices
-ham-radio-stt devices --json
+ham-to-text devices
+ham-to-text devices --json
 
 # Override config
-ham-radio-stt file audio.wav --model small --denoiser deepfilter
-ham-radio-stt file audio.wav --config custom.toml
+ham-to-text file audio.wav --model small --denoiser deepfilter
+ham-to-text file audio.wav --config custom.toml
 
 # Version
-ham-radio-stt --version
+ham-to-text --version
 ```
 
 ### 5.2 Output Discipline

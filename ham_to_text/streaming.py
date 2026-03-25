@@ -10,9 +10,9 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from ham_radio_stt import StreamError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text import StreamError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class StreamingSession:
     ) -> None:
         if sd is None:
             raise StreamError(
-                "sounddevice not installed. Run: pip install ham-radio-stt[stream]"
+                "sounddevice not installed. Run: pip install ham-to-text[stream]"
             )
 
         self._pipeline = pipeline

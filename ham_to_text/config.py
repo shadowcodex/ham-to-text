@@ -7,7 +7,7 @@ from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import Optional
 
-from ham_radio_stt import ConfigError
+from ham_to_text import ConfigError
 
 _SECTION_PREFIX = {
     "whisper": "whisper_",

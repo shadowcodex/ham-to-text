@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from ham_radio_stt.config import PipelineConfig, load_config_from_toml
+from ham_to_text.config import PipelineConfig, load_config_from_toml
 
 
 class TestPipelineConfigDefaults:
@@ -70,14 +70,14 @@ class TestLoadConfigFromToml:
         assert set_fields == set()
 
     def test_invalid_toml_raises_config_error(self, tmp_path):
-        from ham_radio_stt import ConfigError
+        from ham_to_text import ConfigError
         toml_file = tmp_path / "bad.toml"
         toml_file.write_text("this is not valid toml [[[")
         with pytest.raises(ConfigError):
             load_config_from_toml(toml_file)
 
     def test_unknown_key_raises_config_error(self, tmp_path):
-        from ham_radio_stt import ConfigError
+        from ham_to_text import ConfigError
         toml_file = tmp_path / "test.toml"
         toml_file.write_text("[whisper]\nnonexistent_key = 42\n")
         with pytest.raises(ConfigError):

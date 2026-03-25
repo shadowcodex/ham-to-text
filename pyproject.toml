@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ham-radio-stt"
+name = "ham-to-text"
 version = "0.1.0"
 description = "CLI speech-to-text for ham radio audio — offline, pluggable, fast"
 readme = "README.md"
@@ -24,7 +24,7 @@ stream = [
     "sounddevice>=0.4.6",
 ]
 all = [
-    "ham-radio-stt[deepfilter,stream]",
+    "ham-to-text[deepfilter,stream]",
 ]
 dev = [
     "pytest>=7.0.0",
@@ -32,4 +32,4 @@ dev = [
 ]
 
 [project.scripts]
-ham-radio-stt = "ham_radio_stt.cli:main"
+ham-to-text = "ham_to_text.cli:main"

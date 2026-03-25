@@ -7,8 +7,8 @@ import math
 
 import numpy as np
 
-from ham_radio_stt import ModelLoadError
-from ham_radio_stt.config import PipelineConfig
+from ham_to_text import ModelLoadError
+from ham_to_text.config import PipelineConfig
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ try:
             out = resample_poly(enhanced_np, 1, 3).astype(np.float32)
             return out, 16000
 
-    from ham_radio_stt.stages.denoise import register_denoiser
+    from ham_to_text.stages.denoise import register_denoiser
     register_denoiser("deepfilter", DeepFilterDenoiser)
     logger.debug("DeepFilterNet denoiser registered")
 

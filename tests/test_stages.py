@@ -6,10 +6,10 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from ham_radio_stt import AudioProcessingError, ModelLoadError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.stages.sox_preprocess import SoxPreprocess
-from ham_radio_stt.stages.denoise import (
+from ham_to_text import AudioProcessingError, ModelLoadError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.stages.sox_preprocess import SoxPreprocess
+from ham_to_text.stages.denoise import (
     NoOpDenoiser,
     get_denoiser,
     register_denoiser,
@@ -93,7 +93,7 @@ class TestDenoiserRegistry:
             def __init__(self, config): pass
             def process(self, audio, sr): return audio, sr
 
-        from ham_radio_stt.stages import denoise
+        from ham_to_text.stages import denoise
         original = denoise._REGISTRY.copy()
         monkeypatch.setattr(denoise, "_REGISTRY", {**original})
 

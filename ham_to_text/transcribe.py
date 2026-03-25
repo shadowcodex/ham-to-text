@@ -8,9 +8,9 @@ import time
 import numpy as np
 from faster_whisper import WhisperModel
 
-from ham_radio_stt import ModelLoadError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text import ModelLoadError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
 
 logger = logging.getLogger(__name__)
 

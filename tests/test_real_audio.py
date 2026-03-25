@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.result import TranscriptionResult
 
 
 @pytest.mark.real_audio
@@ -9,8 +9,8 @@ from ham_radio_stt.result import TranscriptionResult
 @pytest.mark.requires_sox
 class TestRealAudio:
     def test_transcription_produces_result(self, real_audio_files):
-        from ham_radio_stt.pipeline import Pipeline
-        from ham_radio_stt.config import PipelineConfig
+        from ham_to_text.pipeline import Pipeline
+        from ham_to_text.config import PipelineConfig
 
         config = PipelineConfig(whisper_model="tiny")
         pipeline = Pipeline(config)

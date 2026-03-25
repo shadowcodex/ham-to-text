@@ -1,5 +1,5 @@
 import pytest
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.result import TranscriptionResult
 
 
 def _make_result(**overrides) -> TranscriptionResult:

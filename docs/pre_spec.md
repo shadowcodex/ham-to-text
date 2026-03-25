@@ -80,7 +80,7 @@ method should trigger this eagerly so the caller knows about it upfront, not mid
 ## 3. Project Layout
 
 ```
-ham_radio_stt/
+ham_to_text/
 ├── __init__.py              # exports: HamRadioSTT, TranscriptionResult, PipelineConfig
 ├── config.py                # PipelineConfig dataclass (all tunable parameters)
 ├── pipeline.py              # HamRadioSTT — main public class
@@ -429,22 +429,22 @@ Implement with `argparse` (no extra deps):
 
 ```
 # Transcribe a file
-python -m ham_radio_stt file path/to/audio.wav
+python -m ham_to_text file path/to/audio.wav
 
 # Stream from default mic
-python -m ham_radio_stt stream
+python -m ham_to_text stream
 
 # Stream from specific device
-python -m ham_radio_stt stream --device 2
+python -m ham_to_text stream --device 2
 
 # List audio devices
-python -m ham_radio_stt devices
+python -m ham_to_text devices
 
 # Use a different model (faster but less accurate)
-python -m ham_radio_stt file audio.wav --model large-v3-turbo
+python -m ham_to_text file audio.wav --model large-v3-turbo
 
 # Output as JSON (for piping to automation)
-python -m ham_radio_stt file audio.wav --json
+python -m ham_to_text file audio.wav --json
 ```
 
 JSON output format (for `--json` flag):

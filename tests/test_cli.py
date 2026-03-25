@@ -4,12 +4,12 @@ import sys
 
 import pytest
 
-from ham_radio_stt.cli import format_json_line, format_error_json
+from ham_to_text.cli import format_json_line, format_error_json
 
 
 class TestFormatJsonLine:
     def test_transcription_has_type(self):
-        from ham_radio_stt.result import TranscriptionResult
+        from ham_to_text.result import TranscriptionResult
         result = TranscriptionResult(
             text="CQ", segments=[], language="en",
             duration_s=1.0, processing_time_s=0.5,
@@ -23,7 +23,7 @@ class TestFormatJsonLine:
         assert "is_valid" in parsed
 
     def test_file_mode_fields(self):
-        from ham_radio_stt.result import TranscriptionResult
+        from ham_to_text.result import TranscriptionResult
         result = TranscriptionResult(
             text="CQ", segments=[], language="en",
             duration_s=1.0, processing_time_s=0.5,
@@ -49,7 +49,7 @@ class TestFormatErrorJson:
 class TestCliEntryPoint:
     def test_version_flag(self):
         result = subprocess.run(
-            [sys.executable, "-m", "ham_radio_stt", "--version"],
+            [sys.executable, "-m", "ham_to_text", "--version"],
             capture_output=True, text=True,
         )
         assert result.returncode == 0
@@ -57,14 +57,14 @@ class TestCliEntryPoint:
 
     def test_no_args_shows_help(self):
         result = subprocess.run(
-            [sys.executable, "-m", "ham_radio_stt"],
+            [sys.executable, "-m", "ham_to_text"],
             capture_output=True, text=True,
         )
         assert result.returncode != 0 or "usage" in result.stderr.lower() or "usage" in result.stdout.lower()
 
     def test_file_missing_path_exits_2(self):
         result = subprocess.run(
-            [sys.executable, "-m", "ham_radio_stt", "file"],
+            [sys.executable, "-m", "ham_to_text", "file"],
             capture_output=True, text=True,
         )
         assert result.returncode == 2

@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.streaming import StreamingSession
-from ham_radio_stt.result import TranscriptionResult
-from ham_radio_stt import StreamError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.streaming import StreamingSession
+from ham_to_text.result import TranscriptionResult
+from ham_to_text import StreamError
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ class TestStreamingSession:
         config = PipelineConfig()
         results = []
 
-        with patch("ham_radio_stt.streaming.sd") as mock_sd:
+        with patch("ham_to_text.streaming.sd") as mock_sd:
             mock_stream = MagicMock()
             mock_sd.InputStream.return_value.__enter__ = MagicMock(return_value=mock_stream)
             mock_sd.InputStream.return_value.__exit__ = MagicMock(return_value=False)
@@ -51,7 +51,7 @@ class TestStreamingSession:
     def test_pause_and_resume(self, mock_pipeline):
         config = PipelineConfig()
 
-        with patch("ham_radio_stt.streaming.sd") as mock_sd:
+        with patch("ham_to_text.streaming.sd") as mock_sd:
             mock_stream = MagicMock()
             mock_sd.InputStream.return_value.__enter__ = MagicMock(return_value=mock_stream)
             mock_sd.InputStream.return_value.__exit__ = MagicMock(return_value=False)
@@ -67,6 +67,6 @@ class TestStreamingSession:
 
     def test_missing_sounddevice_raises(self, mock_pipeline):
         config = PipelineConfig()
-        with patch("ham_radio_stt.streaming.sd", None):
+        with patch("ham_to_text.streaming.sd", None):
             with pytest.raises(StreamError):
                 StreamingSession(mock_pipeline, config, lambda r: None)

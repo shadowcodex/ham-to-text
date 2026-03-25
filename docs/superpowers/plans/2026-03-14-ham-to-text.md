@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.11+, faster-whisper (CTranslate2), SoX (subprocess), sounddevice (optional), DeepFilterNet 3 (optional), numpy, soundfile, pytest
 
-**Spec:** `docs/superpowers/specs/2026-03-14-ham-radio-stt-design.md`
+**Spec:** `docs/superpowers/specs/2026-03-14-ham-to-text-design.md`
 
 ---
 
@@ -20,18 +20,18 @@
 | `.gitignore` | Python/IDE/audio ignores | 1 |
 | `README.md` | Project overview, install, usage | 1 |
 | `hamstt.toml.example` | Example config file | 1 |
-| `ham_radio_stt/__init__.py` | Public API exports, exception hierarchy | 2 |
-| `ham_radio_stt/result.py` | `TranscriptionResult` dataclass | 2 |
-| `ham_radio_stt/config.py` | `PipelineConfig` dataclass, TOML loading | 3 |
-| `ham_radio_stt/stages/__init__.py` | `PipelineStage` protocol | 4 |
-| `ham_radio_stt/stages/sox_preprocess.py` | SoX subprocess stage | 4 |
-| `ham_radio_stt/stages/denoise.py` | Denoiser registry + `NoOpDenoiser` | 5 |
-| `ham_radio_stt/stages/deepfilter.py` | DFN3 denoiser (optional) | 5 |
-| `ham_radio_stt/transcribe.py` | Whisper transcription wrapper | 6 |
-| `ham_radio_stt/pipeline.py` | `Pipeline` class — composes stages | 7 |
-| `ham_radio_stt/cli.py` | argparse CLI, JSON output formatting | 8 |
-| `ham_radio_stt/__main__.py` | `python -m ham_radio_stt` entry point | 8 |
-| `ham_radio_stt/streaming.py` | `StreamingSession` — capture + flush | 9 |
+| `ham_to_text/__init__.py` | Public API exports, exception hierarchy | 2 |
+| `ham_to_text/result.py` | `TranscriptionResult` dataclass | 2 |
+| `ham_to_text/config.py` | `PipelineConfig` dataclass, TOML loading | 3 |
+| `ham_to_text/stages/__init__.py` | `PipelineStage` protocol | 4 |
+| `ham_to_text/stages/sox_preprocess.py` | SoX subprocess stage | 4 |
+| `ham_to_text/stages/denoise.py` | Denoiser registry + `NoOpDenoiser` | 5 |
+| `ham_to_text/stages/deepfilter.py` | DFN3 denoiser (optional) | 5 |
+| `ham_to_text/transcribe.py` | Whisper transcription wrapper | 6 |
+| `ham_to_text/pipeline.py` | `Pipeline` class — composes stages | 7 |
+| `ham_to_text/cli.py` | argparse CLI, JSON output formatting | 8 |
+| `ham_to_text/__main__.py` | `python -m ham_to_text` entry point | 8 |
+| `ham_to_text/streaming.py` | `StreamingSession` — capture + flush | 9 |
 | `tests/conftest.py` | Fixtures, `--audio-file` option, markers | 2 |
 | `tests/test_result.py` | `TranscriptionResult` tests | 2 |
 | `tests/test_config.py` | Config loading/layering tests | 3 |
@@ -61,7 +61,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ham-radio-stt"
+name = "ham-to-text"
 version = "0.1.0"
 description = "CLI speech-to-text for ham radio audio — offline, pluggable, fast"
 readme = "README.md"
@@ -82,7 +82,7 @@ stream = [
     "sounddevice>=0.4.6",
 ]
 all = [
-    "ham-radio-stt[deepfilter,stream]",
+    "ham-to-text[deepfilter,stream]",
 ]
 dev = [
     "pytest>=7.0.0",
@@ -90,7 +90,7 @@ dev = [
 ]
 
 [project.scripts]
-ham-radio-stt = "ham_radio_stt.cli:main"
+ham-to-text = "ham_to_text.cli:main"
 ```
 
 - [ ] **Step 2: Create `.gitignore`**
@@ -178,35 +178,35 @@ choco install sox
 
 ```bash
 # Core (file transcription)
-pip install ham-radio-stt
+pip install ham-to-text
 
 # With live streaming support
-pip install ham-radio-stt[stream]
+pip install ham-to-text[stream]
 
 # With DeepFilterNet 3 denoiser
-pip install ham-radio-stt[deepfilter]
+pip install ham-to-text[deepfilter]
 
 # Everything
-pip install ham-radio-stt[all]
+pip install ham-to-text[all]
 ```
 
 ## Usage
 
 ```bash
 # Transcribe a file
-ham-radio-stt file audio.wav
+ham-to-text file audio.wav
 
 # Transcribe with JSON output
-ham-radio-stt file audio.wav --json
+ham-to-text file audio.wav --json
 
 # Stream from default microphone
-ham-radio-stt stream --json
+ham-to-text stream --json
 
 # List audio devices
-ham-radio-stt devices
+ham-to-text devices
 
 # Use a different model
-ham-radio-stt file audio.wav --model small
+ham-to-text file audio.wav --model small
 ```
 
 ## Configuration
@@ -278,7 +278,7 @@ post_filter = true              # Slight over-attenuation of very noisy sections
 
 - [ ] **Step 5: Create package directories**
 
-Run: `mkdir -p ham_radio_stt/stages tests`
+Run: `mkdir -p ham_to_text/stages tests`
 
 - [ ] **Step 6: Commit scaffolding**
 
@@ -292,8 +292,8 @@ git commit -m "feat: add project scaffolding with pyproject.toml, README, gitign
 ### Task 2: TranscriptionResult dataclass, exceptions, and test fixtures
 
 **Files:**
-- Create: `ham_radio_stt/__init__.py`
-- Create: `ham_radio_stt/result.py`
+- Create: `ham_to_text/__init__.py`
+- Create: `ham_to_text/result.py`
 - Create: `tests/conftest.py`
 - Create: `tests/test_result.py`
 
@@ -303,7 +303,7 @@ Create `tests/test_result.py`:
 
 ```python
 import pytest
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.result import TranscriptionResult
 
 
 def _make_result(**overrides) -> TranscriptionResult:
@@ -388,9 +388,9 @@ class TestToJsonDict:
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `python -m pytest tests/test_result.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named 'ham_radio_stt'`
+Expected: FAIL — `ModuleNotFoundError: No module named 'ham_to_text'`
 
-- [ ] **Step 3: Create `ham_radio_stt/__init__.py`**
+- [ ] **Step 3: Create `ham_to_text/__init__.py`**
 
 ```python
 """Ham Radio STT — Offline speech-to-text for ham radio audio."""
@@ -399,7 +399,7 @@ __version__ = "0.1.0"
 
 
 class HamSTTError(Exception):
-    """Base exception for ham-radio-stt."""
+    """Base exception for ham-to-text."""
 
 
 class AudioProcessingError(HamSTTError):
@@ -418,7 +418,7 @@ class ConfigError(HamSTTError):
     """Bad TOML config or invalid parameter values."""
 ```
 
-- [ ] **Step 4: Create `ham_radio_stt/result.py`**
+- [ ] **Step 4: Create `ham_to_text/result.py`**
 
 ```python
 """TranscriptionResult dataclass."""
@@ -572,7 +572,7 @@ Expected: All 12 tests PASS
 - [ ] **Step 7: Commit**
 
 ```bash
-git add ham_radio_stt/__init__.py ham_radio_stt/result.py tests/conftest.py tests/test_result.py
+git add ham_to_text/__init__.py ham_to_text/result.py tests/conftest.py tests/test_result.py
 git commit -m "feat: add TranscriptionResult dataclass, exceptions, and test fixtures"
 ```
 
@@ -581,7 +581,7 @@ git commit -m "feat: add TranscriptionResult dataclass, exceptions, and test fix
 ### Task 3: PipelineConfig and TOML loading
 
 **Files:**
-- Create: `ham_radio_stt/config.py`
+- Create: `ham_to_text/config.py`
 - Create: `tests/test_config.py`
 
 - [ ] **Step 1: Write config tests**
@@ -591,7 +591,7 @@ Create `tests/test_config.py`:
 ```python
 import pytest
 from pathlib import Path
-from ham_radio_stt.config import PipelineConfig, load_config_from_toml
+from ham_to_text.config import PipelineConfig, load_config_from_toml
 
 
 class TestPipelineConfigDefaults:
@@ -662,14 +662,14 @@ class TestLoadConfigFromToml:
         assert set_fields == set()
 
     def test_invalid_toml_raises_config_error(self, tmp_path):
-        from ham_radio_stt import ConfigError
+        from ham_to_text import ConfigError
         toml_file = tmp_path / "bad.toml"
         toml_file.write_text("this is not valid toml [[[")
         with pytest.raises(ConfigError):
             load_config_from_toml(toml_file)
 
     def test_unknown_key_raises_config_error(self, tmp_path):
-        from ham_radio_stt import ConfigError
+        from ham_to_text import ConfigError
         toml_file = tmp_path / "test.toml"
         toml_file.write_text("[whisper]\nnonexistent_key = 42\n")
         with pytest.raises(ConfigError):
@@ -677,7 +677,7 @@ class TestLoadConfigFromToml:
 
     def test_partial_toml_does_not_clobber_earlier_layers(self, tmp_path):
         """A partial TOML should only override the fields it specifies."""
-        from ham_radio_stt.config import load_config
+        from ham_to_text.config import load_config
         from dataclasses import replace
 
         global_toml = tmp_path / "global.toml"
@@ -698,9 +698,9 @@ class TestLoadConfigFromToml:
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `python -m pytest tests/test_config.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named 'ham_radio_stt.config'`
+Expected: FAIL — `ModuleNotFoundError: No module named 'ham_to_text.config'`
 
-- [ ] **Step 3: Implement `ham_radio_stt/config.py`**
+- [ ] **Step 3: Implement `ham_to_text/config.py`**
 
 ```python
 """PipelineConfig dataclass and TOML config loading."""
@@ -712,7 +712,7 @@ from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import Optional
 
-from ham_radio_stt import ConfigError
+from ham_to_text import ConfigError
 
 # Maps TOML [section] -> dataclass field prefix
 _SECTION_PREFIX = {
@@ -860,7 +860,7 @@ Expected: All 13 tests PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ham_radio_stt/config.py tests/test_config.py
+git add ham_to_text/config.py tests/test_config.py
 git commit -m "feat: add PipelineConfig with TOML loading and layered config"
 ```
 
@@ -871,8 +871,8 @@ git commit -m "feat: add PipelineConfig with TOML loading and layered config"
 ### Task 4: PipelineStage protocol and SoX preprocessing
 
 **Files:**
-- Create: `ham_radio_stt/stages/__init__.py`
-- Create: `ham_radio_stt/stages/sox_preprocess.py`
+- Create: `ham_to_text/stages/__init__.py`
+- Create: `ham_to_text/stages/sox_preprocess.py`
 - Create: `tests/test_stages.py`
 
 - [ ] **Step 1: Write SoX stage tests**
@@ -888,9 +888,9 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.stages.sox_preprocess import SoxPreprocess
-from ham_radio_stt import AudioProcessingError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.stages.sox_preprocess import SoxPreprocess
+from ham_to_text import AudioProcessingError
 
 
 @pytest.fixture
@@ -943,7 +943,7 @@ class TestSoxPreprocess:
 Run: `python -m pytest tests/test_stages.py -v`
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Create `ham_radio_stt/stages/__init__.py`**
+- [ ] **Step 3: Create `ham_to_text/stages/__init__.py`**
 
 ```python
 """Pipeline stage protocol and stage exports."""
@@ -964,7 +964,7 @@ class PipelineStage(Protocol):
         ...
 ```
 
-- [ ] **Step 4: Create `ham_radio_stt/stages/sox_preprocess.py`**
+- [ ] **Step 4: Create `ham_to_text/stages/sox_preprocess.py`**
 
 ```python
 """Stage 1: SoX preprocessing — bandpass filter, compand, normalize, resample."""
@@ -979,8 +979,8 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
-from ham_radio_stt import AudioProcessingError
-from ham_radio_stt.config import PipelineConfig
+from ham_to_text import AudioProcessingError
+from ham_to_text.config import PipelineConfig
 
 
 class SoxPreprocess:
@@ -1052,7 +1052,7 @@ Expected: PASS (requires_sox tests skip if SoX not installed, others pass)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add ham_radio_stt/stages/__init__.py ham_radio_stt/stages/sox_preprocess.py tests/test_stages.py
+git add ham_to_text/stages/__init__.py ham_to_text/stages/sox_preprocess.py tests/test_stages.py
 git commit -m "feat: add PipelineStage protocol and SoX preprocessing stage"
 ```
 
@@ -1061,8 +1061,8 @@ git commit -m "feat: add PipelineStage protocol and SoX preprocessing stage"
 ### Task 5: Denoiser registry, NoOpDenoiser, and DeepFilterNet stage
 
 **Files:**
-- Create: `ham_radio_stt/stages/denoise.py`
-- Create: `ham_radio_stt/stages/deepfilter.py`
+- Create: `ham_to_text/stages/denoise.py`
+- Create: `ham_to_text/stages/deepfilter.py`
 - Modify: `tests/test_stages.py`
 
 - [ ] **Step 1: Write denoiser tests**
@@ -1070,13 +1070,13 @@ git commit -m "feat: add PipelineStage protocol and SoX preprocessing stage"
 Append to `tests/test_stages.py`:
 
 ```python
-from ham_radio_stt.stages.denoise import (
+from ham_to_text.stages.denoise import (
     NoOpDenoiser,
     get_denoiser,
     register_denoiser,
     registered_denoisers,
 )
-from ham_radio_stt import ModelLoadError
+from ham_to_text import ModelLoadError
 
 
 class TestNoOpDenoiser:
@@ -1111,7 +1111,7 @@ class TestDenoiserRegistry:
             def process(self, audio, sr): return audio, sr
 
         # Use monkeypatch to avoid polluting global registry
-        from ham_radio_stt.stages import denoise
+        from ham_to_text.stages import denoise
         original = denoise._REGISTRY.copy()
         monkeypatch.setattr(denoise, "_REGISTRY", {**original})
 
@@ -1125,7 +1125,7 @@ class TestDenoiserRegistry:
 Run: `python -m pytest tests/test_stages.py::TestNoOpDenoiser -v`
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Create `ham_radio_stt/stages/denoise.py`**
+- [ ] **Step 3: Create `ham_to_text/stages/denoise.py`**
 
 ```python
 """Denoiser registry and NoOp denoiser."""
@@ -1136,8 +1136,8 @@ from typing import Any
 
 import numpy as np
 
-from ham_radio_stt import ModelLoadError
-from ham_radio_stt.config import PipelineConfig
+from ham_to_text import ModelLoadError
+from ham_to_text.config import PipelineConfig
 
 
 class NoOpDenoiser:
@@ -1161,7 +1161,7 @@ def get_denoiser(name: str, config: PipelineConfig) -> Any:
     if name not in _REGISTRY:
         raise ModelLoadError(
             f"Unknown denoiser: {name}. Available: {list(_REGISTRY.keys())}. "
-            f"For DeepFilterNet: pip install ham-radio-stt[deepfilter]"
+            f"For DeepFilterNet: pip install ham-to-text[deepfilter]"
         )
     return _REGISTRY[name](config)
 
@@ -1170,7 +1170,7 @@ def registered_denoisers() -> list[str]:
     return list(_REGISTRY.keys())
 ```
 
-- [ ] **Step 4: Create `ham_radio_stt/stages/deepfilter.py`**
+- [ ] **Step 4: Create `ham_to_text/stages/deepfilter.py`**
 
 ```python
 """DeepFilterNet 3 denoiser stage (optional — requires deepfilternet + PyTorch)."""
@@ -1181,8 +1181,8 @@ import logging
 
 import numpy as np
 
-from ham_radio_stt import ModelLoadError
-from ham_radio_stt.config import PipelineConfig
+from ham_to_text import ModelLoadError
+from ham_to_text.config import PipelineConfig
 
 logger = logging.getLogger(__name__)
 
@@ -1232,7 +1232,7 @@ try:
             return out, 16000
 
     # Auto-register
-    from ham_radio_stt.stages.denoise import register_denoiser
+    from ham_to_text.stages.denoise import register_denoiser
     register_denoiser("deepfilter", DeepFilterDenoiser)
     logger.debug("DeepFilterNet denoiser registered")
 
@@ -1249,7 +1249,7 @@ Expected: All denoiser tests PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add ham_radio_stt/stages/denoise.py ham_radio_stt/stages/deepfilter.py tests/test_stages.py
+git add ham_to_text/stages/denoise.py ham_to_text/stages/deepfilter.py tests/test_stages.py
 git commit -m "feat: add denoiser registry with NoOp and optional DeepFilterNet stage"
 ```
 
@@ -1260,7 +1260,7 @@ git commit -m "feat: add denoiser registry with NoOp and optional DeepFilterNet 
 ### Task 6: Whisper transcription wrapper
 
 **Files:**
-- Create: `ham_radio_stt/transcribe.py`
+- Create: `ham_to_text/transcribe.py`
 - Create: `tests/test_transcribe.py`
 
 - [ ] **Step 1: Write transcription tests**
@@ -1274,10 +1274,10 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.transcribe import WhisperTranscriber
-from ham_radio_stt.result import TranscriptionResult
-from ham_radio_stt import ModelLoadError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.transcribe import WhisperTranscriber
+from ham_to_text.result import TranscriptionResult
+from ham_to_text import ModelLoadError
 
 
 class TestWhisperTranscriber:
@@ -1294,7 +1294,7 @@ class TestWhisperTranscriber:
         mock_info.language = "en"
         mock_info.duration = 3.0
 
-        with patch("ham_radio_stt.transcribe.WhisperModel") as MockModel:
+        with patch("ham_to_text.transcribe.WhisperModel") as MockModel:
             instance = MockModel.return_value
             instance.transcribe.return_value = (iter([mock_segment]), mock_info)
 
@@ -1316,7 +1316,7 @@ class TestWhisperTranscriber:
         mock_info.language = "en"
         mock_info.duration = 2.0
 
-        with patch("ham_radio_stt.transcribe.WhisperModel") as MockModel:
+        with patch("ham_to_text.transcribe.WhisperModel") as MockModel:
             instance = MockModel.return_value
             instance.transcribe.return_value = (iter([]), mock_info)
 
@@ -1328,7 +1328,7 @@ class TestWhisperTranscriber:
         assert result.segments == []
 
     def test_model_load_failure_raises(self):
-        with patch("ham_radio_stt.transcribe.WhisperModel", side_effect=Exception("download failed")):
+        with patch("ham_to_text.transcribe.WhisperModel", side_effect=Exception("download failed")):
             with pytest.raises(ModelLoadError, match="download failed"):
                 WhisperTranscriber(PipelineConfig())
 
@@ -1345,7 +1345,7 @@ class TestWhisperTranscriber:
 Run: `python -m pytest tests/test_transcribe.py -v -m "not slow"`
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Implement `ham_radio_stt/transcribe.py`**
+- [ ] **Step 3: Implement `ham_to_text/transcribe.py`**
 
 ```python
 """Whisper transcription wrapper using faster-whisper."""
@@ -1358,9 +1358,9 @@ import time
 import numpy as np
 from faster_whisper import WhisperModel
 
-from ham_radio_stt import ModelLoadError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text import ModelLoadError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
 
 logger = logging.getLogger(__name__)
 
@@ -1451,7 +1451,7 @@ Expected: 3 tests PASS, 1 skipped (slow)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ham_radio_stt/transcribe.py tests/test_transcribe.py
+git add ham_to_text/transcribe.py tests/test_transcribe.py
 git commit -m "feat: add Whisper transcription wrapper with TranscriptionResult output"
 ```
 
@@ -1460,7 +1460,7 @@ git commit -m "feat: add Whisper transcription wrapper with TranscriptionResult 
 ### Task 7: Pipeline class — compose stages and run
 
 **Files:**
-- Create: `ham_radio_stt/pipeline.py`
+- Create: `ham_to_text/pipeline.py`
 - Create: `tests/test_pipeline.py`
 
 - [ ] **Step 1: Write pipeline tests**
@@ -1473,15 +1473,15 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.pipeline import Pipeline
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.config import PipelineConfig
+from ham_to_text.pipeline import Pipeline
+from ham_to_text.result import TranscriptionResult
 
 
 @pytest.fixture
 def mock_pipeline():
     """Pipeline with mocked transcriber and real NoOp denoiser."""
-    with patch("ham_radio_stt.pipeline.WhisperTranscriber") as MockTranscriber:
+    with patch("ham_to_text.pipeline.WhisperTranscriber") as MockTranscriber:
         mock_result = TranscriptionResult(
             text="CQ CQ",
             segments=[{"start": 0.0, "end": 1.0, "text": "CQ CQ"}],
@@ -1495,7 +1495,7 @@ def mock_pipeline():
         )
         MockTranscriber.return_value.transcribe.return_value = mock_result
 
-        with patch("ham_radio_stt.pipeline.SoxPreprocess") as MockSox:
+        with patch("ham_to_text.pipeline.SoxPreprocess") as MockSox:
             MockSox.return_value.process.return_value = (
                 np.zeros(16000, dtype=np.float32),
                 16000,
@@ -1517,7 +1517,7 @@ class TestPipeline:
         assert isinstance(result, TranscriptionResult)
 
     def test_transcribe_file_not_found(self, mock_pipeline):
-        from ham_radio_stt import AudioProcessingError
+        from ham_to_text import AudioProcessingError
         with pytest.raises(AudioProcessingError, match="not found"):
             mock_pipeline.transcribe_file("/nonexistent/file.wav")
 
@@ -1538,7 +1538,7 @@ class TestPipeline:
                 call_order.append("stage2")
                 return audio, sr
 
-        with patch("ham_radio_stt.pipeline.WhisperTranscriber") as MockTranscriber:
+        with patch("ham_to_text.pipeline.WhisperTranscriber") as MockTranscriber:
             mock_result = TranscriptionResult(
                 text="test", segments=[], language="en",
                 duration_s=1.0, processing_time_s=0.5,
@@ -1547,8 +1547,8 @@ class TestPipeline:
             )
             MockTranscriber.return_value.transcribe.return_value = mock_result
 
-            with patch("ham_radio_stt.pipeline.SoxPreprocess", FakeStage1):
-                with patch("ham_radio_stt.pipeline.get_denoiser", return_value=FakeStage2(None)):
+            with patch("ham_to_text.pipeline.SoxPreprocess", FakeStage1):
+                with patch("ham_to_text.pipeline.get_denoiser", return_value=FakeStage2(None)):
                     pipeline = Pipeline(PipelineConfig())
                     pipeline.transcribe_audio(np.zeros(16000, dtype=np.float32), 16000)
 
@@ -1560,7 +1560,7 @@ class TestPipeline:
 Run: `python -m pytest tests/test_pipeline.py -v`
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Implement `ham_radio_stt/pipeline.py`**
+- [ ] **Step 3: Implement `ham_to_text/pipeline.py`**
 
 ```python
 """Pipeline — composes stages and runs them in sequence."""
@@ -1573,12 +1573,12 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
-from ham_radio_stt import AudioProcessingError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
-from ham_radio_stt.stages.sox_preprocess import SoxPreprocess
-from ham_radio_stt.stages.denoise import get_denoiser
-from ham_radio_stt.transcribe import WhisperTranscriber
+from ham_to_text import AudioProcessingError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
+from ham_to_text.stages.sox_preprocess import SoxPreprocess
+from ham_to_text.stages.denoise import get_denoiser
+from ham_to_text.transcribe import WhisperTranscriber
 
 logger = logging.getLogger(__name__)
 
@@ -1625,7 +1625,7 @@ Expected: All 4 tests PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ham_radio_stt/pipeline.py tests/test_pipeline.py
+git add ham_to_text/pipeline.py tests/test_pipeline.py
 git commit -m "feat: add Pipeline class composing stages with transcription"
 ```
 
@@ -1634,8 +1634,8 @@ git commit -m "feat: add Pipeline class composing stages with transcription"
 ### Task 8: CLI with JSON streaming output
 
 **Files:**
-- Create: `ham_radio_stt/cli.py`
-- Create: `ham_radio_stt/__main__.py`
+- Create: `ham_to_text/cli.py`
+- Create: `ham_to_text/__main__.py`
 - Create: `tests/test_cli.py`
 
 - [ ] **Step 1: Write CLI tests**
@@ -1651,12 +1651,12 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.cli import main, format_json_line, format_error_json
+from ham_to_text.cli import main, format_json_line, format_error_json
 
 
 class TestFormatJsonLine:
     def test_transcription_has_type(self):
-        from ham_radio_stt.result import TranscriptionResult
+        from ham_to_text.result import TranscriptionResult
         result = TranscriptionResult(
             text="CQ", segments=[], language="en",
             duration_s=1.0, processing_time_s=0.5,
@@ -1670,7 +1670,7 @@ class TestFormatJsonLine:
         assert "is_valid" in parsed
 
     def test_file_mode_fields(self):
-        from ham_radio_stt.result import TranscriptionResult
+        from ham_to_text.result import TranscriptionResult
         result = TranscriptionResult(
             text="CQ", segments=[], language="en",
             duration_s=1.0, processing_time_s=0.5,
@@ -1696,7 +1696,7 @@ class TestFormatErrorJson:
 class TestCliEntryPoint:
     def test_version_flag(self):
         result = subprocess.run(
-            [sys.executable, "-m", "ham_radio_stt", "--version"],
+            [sys.executable, "-m", "ham_to_text", "--version"],
             capture_output=True, text=True,
         )
         assert result.returncode == 0
@@ -1704,7 +1704,7 @@ class TestCliEntryPoint:
 
     def test_no_args_shows_help(self):
         result = subprocess.run(
-            [sys.executable, "-m", "ham_radio_stt"],
+            [sys.executable, "-m", "ham_to_text"],
             capture_output=True, text=True,
         )
         # argparse shows help or error on no subcommand
@@ -1712,7 +1712,7 @@ class TestCliEntryPoint:
 
     def test_file_missing_path_exits_2(self):
         result = subprocess.run(
-            [sys.executable, "-m", "ham_radio_stt", "file"],
+            [sys.executable, "-m", "ham_to_text", "file"],
             capture_output=True, text=True,
         )
         assert result.returncode == 2
@@ -1723,10 +1723,10 @@ class TestCliEntryPoint:
 Run: `python -m pytest tests/test_cli.py -v`
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Implement `ham_radio_stt/cli.py`**
+- [ ] **Step 3: Implement `ham_to_text/cli.py`**
 
 ```python
-"""CLI entry point for ham-radio-stt."""
+"""CLI entry point for ham-to-text."""
 
 from __future__ import annotations
 
@@ -1737,11 +1737,11 @@ import signal
 import sys
 from pathlib import Path
 
-import ham_radio_stt
-from ham_radio_stt.config import PipelineConfig, load_config
-from ham_radio_stt.result import TranscriptionResult
+import ham_to_text
+from ham_to_text.config import PipelineConfig, load_config
+from ham_to_text.result import TranscriptionResult
 
-logger = logging.getLogger("ham_radio_stt")
+logger = logging.getLogger("ham_to_text")
 
 
 def format_json_line(result: TranscriptionResult) -> str:
@@ -1780,9 +1780,9 @@ def _cmd_file(args: argparse.Namespace) -> int:
     use_json = getattr(args, "json", False)
 
     try:
-        from ham_radio_stt.pipeline import Pipeline
+        from ham_to_text.pipeline import Pipeline
         pipeline = Pipeline(config)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), "MODEL_LOAD_ERROR"), flush=True)
         else:
@@ -1810,7 +1810,7 @@ def _cmd_file(args: argparse.Namespace) -> int:
         else:
             print(result.text)
 
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), type(e).__name__.upper()), flush=True)
         else:
@@ -1825,10 +1825,10 @@ def _cmd_stream(args: argparse.Namespace) -> int:
     use_json = getattr(args, "json", False)
 
     try:
-        from ham_radio_stt.pipeline import Pipeline
-        from ham_radio_stt.streaming import StreamingSession
+        from ham_to_text.pipeline import Pipeline
+        from ham_to_text.streaming import StreamingSession
         pipeline = Pipeline(config)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), "MODEL_LOAD_ERROR"), flush=True)
         else:
@@ -1848,7 +1848,7 @@ def _cmd_stream(args: argparse.Namespace) -> int:
             signal.signal(signal.SIGINT, lambda *_: session.stop())
             while session.is_running:
                 time.sleep(0.1)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), type(e).__name__.upper()), flush=True)
         else:
@@ -1879,7 +1879,7 @@ def _cmd_devices(args: argparse.Namespace) -> int:
                 if d["max_input_channels"] > 0:
                     print(f"  {i}: {d['name']} (inputs: {d['max_input_channels']})")
     except ImportError:
-        msg = "sounddevice not installed. Run: pip install ham-radio-stt[stream]"
+        msg = "sounddevice not installed. Run: pip install ham-to-text[stream]"
         if use_json:
             print(format_error_json(msg, "MISSING_DEPENDENCY"), flush=True)
         else:
@@ -1890,19 +1890,19 @@ def _cmd_devices(args: argparse.Namespace) -> int:
 
 
 def _exit_code_for(error: Exception) -> int:
-    if isinstance(error, ham_radio_stt.ConfigError):
+    if isinstance(error, ham_to_text.ConfigError):
         return 2
-    if isinstance(error, ham_radio_stt.ModelLoadError):
+    if isinstance(error, ham_to_text.ModelLoadError):
         return 3
     return 1
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="ham-radio-stt",
+        prog="ham-to-text",
         description="Offline speech-to-text for ham radio audio",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {ham_radio_stt.__version__}")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {ham_to_text.__version__}")
     parser.add_argument("--log-level", default="WARNING", help="Logging level (default: WARNING)")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1949,13 +1949,13 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 4: Create `ham_radio_stt/__main__.py`**
+- [ ] **Step 4: Create `ham_to_text/__main__.py`**
 
 ```python
-"""Allow running as: python -m ham_radio_stt"""
+"""Allow running as: python -m ham_to_text"""
 
 import sys
-from ham_radio_stt.cli import main
+from ham_to_text.cli import main
 
 sys.exit(main())
 ```
@@ -1968,7 +1968,7 @@ Expected: All 5 tests PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add ham_radio_stt/cli.py ham_radio_stt/__main__.py tests/test_cli.py
+git add ham_to_text/cli.py ham_to_text/__main__.py tests/test_cli.py
 git commit -m "feat: add CLI with file/stream/devices commands and JSON output"
 ```
 
@@ -1979,7 +1979,7 @@ git commit -m "feat: add CLI with file/stream/devices commands and JSON output"
 ### Task 9: StreamingSession — capture thread and flush logic
 
 **Files:**
-- Create: `ham_radio_stt/streaming.py`
+- Create: `ham_to_text/streaming.py`
 - Create: `tests/test_streaming.py`
 
 - [ ] **Step 1: Write streaming tests**
@@ -1994,10 +1994,10 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.streaming import StreamingSession
-from ham_radio_stt.result import TranscriptionResult
-from ham_radio_stt import StreamError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.streaming import StreamingSession
+from ham_to_text.result import TranscriptionResult
+from ham_to_text import StreamError
 
 
 @pytest.fixture
@@ -2022,7 +2022,7 @@ class TestStreamingSession:
         config = PipelineConfig()
         results = []
 
-        with patch("ham_radio_stt.streaming.sd") as mock_sd:
+        with patch("ham_to_text.streaming.sd") as mock_sd:
             # Mock InputStream context manager
             mock_stream = MagicMock()
             mock_sd.InputStream.return_value.__enter__ = MagicMock(return_value=mock_stream)
@@ -2039,7 +2039,7 @@ class TestStreamingSession:
     def test_pause_and_resume(self, mock_pipeline):
         config = PipelineConfig()
 
-        with patch("ham_radio_stt.streaming.sd") as mock_sd:
+        with patch("ham_to_text.streaming.sd") as mock_sd:
             mock_stream = MagicMock()
             mock_sd.InputStream.return_value.__enter__ = MagicMock(return_value=mock_stream)
             mock_sd.InputStream.return_value.__exit__ = MagicMock(return_value=False)
@@ -2055,13 +2055,13 @@ class TestStreamingSession:
     def test_silence_calibration_logged(self, mock_pipeline):
         config = PipelineConfig()
 
-        with patch("ham_radio_stt.streaming.sd") as mock_sd:
+        with patch("ham_to_text.streaming.sd") as mock_sd:
             mock_stream = MagicMock()
             mock_sd.InputStream.return_value.__enter__ = MagicMock(return_value=mock_stream)
             mock_sd.InputStream.return_value.__exit__ = MagicMock(return_value=False)
 
             # Simulate calibration audio (low-level noise)
-            with patch("ham_radio_stt.streaming.StreamingSession._calibrate") as mock_cal:
+            with patch("ham_to_text.streaming.StreamingSession._calibrate") as mock_cal:
                 mock_cal.return_value = 0.01
                 session = StreamingSession(mock_pipeline, config, lambda r: None)
                 with session:
@@ -2070,7 +2070,7 @@ class TestStreamingSession:
 
     def test_missing_sounddevice_raises(self, mock_pipeline):
         config = PipelineConfig()
-        with patch("ham_radio_stt.streaming.sd", None):
+        with patch("ham_to_text.streaming.sd", None):
             with pytest.raises(StreamError):
                 StreamingSession(mock_pipeline, config, lambda r: None)
 ```
@@ -2080,7 +2080,7 @@ class TestStreamingSession:
 Run: `python -m pytest tests/test_streaming.py -v`
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Implement `ham_radio_stt/streaming.py`**
+- [ ] **Step 3: Implement `ham_to_text/streaming.py`**
 
 ```python
 """Streaming session — capture audio from device, VAD-gated flush, transcribe."""
@@ -2095,9 +2095,9 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from ham_radio_stt import StreamError
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text import StreamError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
 
 logger = logging.getLogger(__name__)
 
@@ -2116,7 +2116,7 @@ class StreamingSession:
     ) -> None:
         if sd is None:
             raise StreamError(
-                "sounddevice not installed. Run: pip install ham-radio-stt[stream]"
+                "sounddevice not installed. Run: pip install ham-to-text[stream]"
             )
 
         self._pipeline = pipeline
@@ -2276,7 +2276,7 @@ Expected: All 4 tests PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ham_radio_stt/streaming.py tests/test_streaming.py
+git add ham_to_text/streaming.py tests/test_streaming.py
 git commit -m "feat: add StreamingSession with silence-calibrated VAD flush"
 ```
 
@@ -2287,7 +2287,7 @@ git commit -m "feat: add StreamingSession with silence-calibrated VAD flush"
 **Files:**
 - Modify: `tests/conftest.py` (already has `--audio-file` support)
 - Create: `tests/test_real_audio.py`
-- Modify: `ham_radio_stt/__init__.py` (add public API exports)
+- Modify: `ham_to_text/__init__.py` (add public API exports)
 
 - [ ] **Step 1: Write real audio tests**
 
@@ -2297,7 +2297,7 @@ Create `tests/test_real_audio.py`:
 import pytest
 from pathlib import Path
 
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.result import TranscriptionResult
 
 
 @pytest.mark.real_audio
@@ -2305,8 +2305,8 @@ from ham_radio_stt.result import TranscriptionResult
 @pytest.mark.requires_sox
 class TestRealAudio:
     def test_transcription_produces_result(self, real_audio_files):
-        from ham_radio_stt.pipeline import Pipeline
-        from ham_radio_stt.config import PipelineConfig
+        from ham_to_text.pipeline import Pipeline
+        from ham_to_text.config import PipelineConfig
 
         config = PipelineConfig(whisper_model="tiny")
         pipeline = Pipeline(config)
@@ -2326,13 +2326,13 @@ class TestRealAudio:
             print(f"Valid: {result.is_likely_valid()}")
 ```
 
-- [ ] **Step 2: Update `ham_radio_stt/__init__.py` with public exports**
+- [ ] **Step 2: Update `ham_to_text/__init__.py` with public exports**
 
-Append to `ham_radio_stt/__init__.py`:
+Append to `ham_to_text/__init__.py`:
 
 ```python
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
 
 __all__ = [
     "__version__",
@@ -2354,7 +2354,7 @@ Expected: All tests PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add tests/test_real_audio.py ham_radio_stt/__init__.py
+git add tests/test_real_audio.py ham_to_text/__init__.py
 git commit -m "feat: add real audio test support and public API exports"
 ```
 
@@ -2363,8 +2363,8 @@ git commit -m "feat: add real audio test support and public API exports"
 ### Task 11: Progressive file chunking
 
 **Files:**
-- Modify: `ham_radio_stt/pipeline.py`
-- Modify: `ham_radio_stt/cli.py`
+- Modify: `ham_to_text/pipeline.py`
+- Modify: `ham_to_text/cli.py`
 - Modify: `tests/test_pipeline.py`
 
 - [ ] **Step 1: Write progressive chunking test**
@@ -2375,10 +2375,10 @@ Add to `tests/test_pipeline.py`:
 class TestProgressiveTranscription:
     def test_transcribe_file_progressive_yields_results(self):
         """Verify that transcribe_file_progressive yields multiple results for multi-segment audio."""
-        from ham_radio_stt.pipeline import Pipeline
-        from ham_radio_stt.config import PipelineConfig
+        from ham_to_text.pipeline import Pipeline
+        from ham_to_text.config import PipelineConfig
 
-        with patch("ham_radio_stt.pipeline.WhisperTranscriber") as MockTranscriber:
+        with patch("ham_to_text.pipeline.WhisperTranscriber") as MockTranscriber:
             mock_result = TranscriptionResult(
                 text="CQ", segments=[{"start": 0.0, "end": 1.0, "text": "CQ"}],
                 language="en", duration_s=1.0, processing_time_s=0.5,
@@ -2387,11 +2387,11 @@ class TestProgressiveTranscription:
             )
             MockTranscriber.return_value.transcribe.return_value = mock_result
 
-            with patch("ham_radio_stt.pipeline.SoxPreprocess") as MockSox:
+            with patch("ham_to_text.pipeline.SoxPreprocess") as MockSox:
                 MockSox.return_value.process.return_value = (
                     np.zeros(16000 * 5, dtype=np.float32), 16000,
                 )
-                with patch("ham_radio_stt.pipeline.Pipeline._vad_segment") as mock_vad:
+                with patch("ham_to_text.pipeline.Pipeline._vad_segment") as mock_vad:
                     # Simulate 2 speech segments
                     mock_vad.return_value = [
                         (0, 16000 * 2),    # 0-2s
@@ -2415,7 +2415,7 @@ Expected: FAIL — `AttributeError: 'Pipeline' object has no attribute 'transcri
 
 - [ ] **Step 3: Add `transcribe_file_progressive` and `_vad_segment` to Pipeline**
 
-Add to `ham_radio_stt/pipeline.py`:
+Add to `ham_to_text/pipeline.py`:
 
 ```python
 from typing import Generator
@@ -2499,7 +2499,7 @@ from typing import Generator
 
 - [ ] **Step 4: Update CLI to use progressive mode**
 
-In `ham_radio_stt/cli.py`, update `_cmd_file`:
+In `ham_to_text/cli.py`, update `_cmd_file`:
 
 Replace the try block in `_cmd_file` with:
 
@@ -2512,7 +2512,7 @@ Replace the try block in `_cmd_file` with:
                 # Human mode: always print text. JSON consumers use is_valid to filter.
                 if result.text.strip():
                     print(result.text, flush=True)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), type(e).__name__.upper()), flush=True)
         else:
@@ -2528,7 +2528,7 @@ Expected: All tests PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add ham_radio_stt/pipeline.py ham_radio_stt/cli.py tests/test_pipeline.py
+git add ham_to_text/pipeline.py ham_to_text/cli.py tests/test_pipeline.py
 git commit -m "feat: add progressive file transcription with VAD segmentation"
 ```
 
@@ -2543,8 +2543,8 @@ Expected: Installs successfully
 
 - [ ] **Step 2: Verify CLI entry point**
 
-Run: `ham-radio-stt --version`
-Expected: `ham-radio-stt 0.1.0`
+Run: `ham-to-text --version`
+Expected: `ham-to-text 0.1.0`
 
 - [ ] **Step 3: Run full test suite**
 

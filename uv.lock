@@ -353,7 +353,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ham-radio-stt"
+name = "ham-to-text"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -384,7 +384,7 @@ stream = [
 requires-dist = [
     { name = "deepfilternet", marker = "extra == 'deepfilter'", specifier = ">=0.5.0" },
     { name = "faster-whisper", specifier = ">=1.0.0" },
-    { name = "ham-radio-stt", extras = ["deepfilter", "stream"], marker = "extra == 'all'" },
+    { name = "ham-to-text", extras = ["deepfilter", "stream"], marker = "extra == 'all'" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.10.0" },

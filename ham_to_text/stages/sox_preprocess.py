@@ -10,8 +10,8 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
-from ham_radio_stt import AudioProcessingError
-from ham_radio_stt.config import PipelineConfig
+from ham_to_text import AudioProcessingError
+from ham_to_text.config import PipelineConfig
 
 
 class SoxPreprocess:

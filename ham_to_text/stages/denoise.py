@@ -6,8 +6,8 @@ from typing import Any
 
 import numpy as np
 
-from ham_radio_stt import ModelLoadError
-from ham_radio_stt.config import PipelineConfig
+from ham_to_text import ModelLoadError
+from ham_to_text.config import PipelineConfig
 
 
 class NoOpDenoiser:
@@ -31,7 +31,7 @@ def get_denoiser(name: str, config: PipelineConfig) -> Any:
     if name not in _REGISTRY:
         raise ModelLoadError(
             f"Unknown denoiser: {name}. Available: {list(_REGISTRY.keys())}. "
-            f"For DeepFilterNet: pip install ham-radio-stt[deepfilter]"
+            f"For DeepFilterNet: pip install ham-to-text[deepfilter]"
         )
     return _REGISTRY[name](config)
 

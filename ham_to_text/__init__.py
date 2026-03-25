@@ -4,7 +4,7 @@ __version__ = "0.1.0"
 
 
 class HamSTTError(Exception):
-    """Base exception for ham-radio-stt."""
+    """Base exception for ham-to-text."""
 
 
 class AudioProcessingError(HamSTTError):
@@ -23,8 +23,8 @@ class ConfigError(HamSTTError):
     """Bad TOML config or invalid parameter values."""
 
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.config import PipelineConfig
+from ham_to_text.result import TranscriptionResult
 
 __all__ = [
     "__version__",

@@ -1,4 +1,4 @@
-"""CLI entry point for ham-radio-stt."""
+"""CLI entry point for ham-to-text."""
 
 from __future__ import annotations
 
@@ -9,11 +9,11 @@ import signal
 import sys
 from pathlib import Path
 
-import ham_radio_stt
-from ham_radio_stt.config import load_config
-from ham_radio_stt.result import TranscriptionResult
+import ham_to_text
+from ham_to_text.config import load_config
+from ham_to_text.result import TranscriptionResult
 
-logger = logging.getLogger("ham_radio_stt")
+logger = logging.getLogger("ham_to_text")
 
 
 def format_json_line(result: TranscriptionResult) -> str:
@@ -58,7 +58,7 @@ def _setup_logging(level: str) -> None:
             handler.setLevel(log_level)
 
     # Set our own logger explicitly
-    ham_logger = logging.getLogger("ham_radio_stt")
+    ham_logger = logging.getLogger("ham_to_text")
     ham_logger.setLevel(log_level)
 
     # Force huggingface_hub download progress bars to show
@@ -98,9 +98,9 @@ def _cmd_file(args: argparse.Namespace) -> int:
 
     _status(f"Loading model: {config.whisper_model} (this may download ~1.5GB on first run)...", use_json)
     try:
-        from ham_radio_stt.pipeline import Pipeline
+        from ham_to_text.pipeline import Pipeline
         pipeline = Pipeline(config)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), "MODEL_LOAD_ERROR"), flush=True)
         else:
@@ -127,7 +127,7 @@ def _cmd_file(args: argparse.Namespace) -> int:
                 # Human mode: always print text. JSON consumers use is_valid to filter.
                 if result.text.strip():
                     print(result.text, flush=True)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), type(e).__name__.upper()), flush=True)
         else:
@@ -143,10 +143,10 @@ def _cmd_stream(args: argparse.Namespace) -> int:
 
     _status(f"Loading model: {config.whisper_model} (this may download ~1.5GB on first run)...", use_json)
     try:
-        from ham_radio_stt.pipeline import Pipeline
-        from ham_radio_stt.streaming import StreamingSession
+        from ham_to_text.pipeline import Pipeline
+        from ham_to_text.streaming import StreamingSession
         pipeline = Pipeline(config)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), "MODEL_LOAD_ERROR"), flush=True)
         else:
@@ -168,7 +168,7 @@ def _cmd_stream(args: argparse.Namespace) -> int:
             signal.signal(signal.SIGINT, lambda *_: session.stop())
             while session.is_running:
                 time.sleep(0.1)
-    except ham_radio_stt.HamSTTError as e:
+    except ham_to_text.HamSTTError as e:
         if use_json:
             print(format_error_json(str(e), type(e).__name__.upper()), flush=True)
         else:
@@ -199,7 +199,7 @@ def _cmd_devices(args: argparse.Namespace) -> int:
                 if d["max_input_channels"] > 0:
                     print(f"  {i}: {d['name']} (inputs: {d['max_input_channels']})")
     except ImportError:
-        msg = "sounddevice not installed. Run: pip install ham-radio-stt[stream]"
+        msg = "sounddevice not installed. Run: pip install ham-to-text[stream]"
         if use_json:
             print(format_error_json(msg, "MISSING_DEPENDENCY"), flush=True)
         else:
@@ -210,9 +210,9 @@ def _cmd_devices(args: argparse.Namespace) -> int:
 
 
 def _exit_code_for(error: Exception) -> int:
-    if isinstance(error, ham_radio_stt.ConfigError):
+    if isinstance(error, ham_to_text.ConfigError):
         return 2
-    if isinstance(error, ham_radio_stt.ModelLoadError):
+    if isinstance(error, ham_to_text.ModelLoadError):
         return 3
     return 1
 
@@ -221,10 +221,10 @@ def main(argv: list[str] | None = None) -> int:
     _load_dotenv()
 
     parser = argparse.ArgumentParser(
-        prog="ham-radio-stt",
+        prog="ham-to-text",
         description="Offline speech-to-text for ham radio audio",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {ham_radio_stt.__version__}")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {ham_to_text.__version__}")
     parser.add_argument("--log-level", default="WARNING", help="Logging level (default: WARNING)")
 
     subparsers = parser.add_subparsers(dest="command", required=True)

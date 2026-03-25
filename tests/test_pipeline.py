@@ -3,14 +3,14 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.pipeline import Pipeline
-from ham_radio_stt.result import TranscriptionResult
+from ham_to_text.config import PipelineConfig
+from ham_to_text.pipeline import Pipeline
+from ham_to_text.result import TranscriptionResult
 
 
 @pytest.fixture
 def mock_pipeline():
-    with patch("ham_radio_stt.pipeline.WhisperTranscriber") as MockTranscriber:
+    with patch("ham_to_text.pipeline.WhisperTranscriber") as MockTranscriber:
         mock_result = TranscriptionResult(
             text="CQ CQ",
             segments=[{"start": 0.0, "end": 1.0, "text": "CQ CQ"}],
@@ -24,13 +24,13 @@ def mock_pipeline():
         )
         MockTranscriber.return_value.transcribe.return_value = mock_result
 
-        with patch("ham_radio_stt.pipeline.SoxPreprocess") as MockSox:
+        with patch("ham_to_text.pipeline.SoxPreprocess") as MockSox:
             MockSox.return_value.process.return_value = (
                 np.zeros(16000, dtype=np.float32),
                 16000,
             )
             MockSox.return_value.name = "sox_preprocess"
-            with patch("ham_radio_stt.pipeline.get_denoiser") as MockDenoiser:
+            with patch("ham_to_text.pipeline.get_denoiser") as MockDenoiser:
                 MockDenoiser.return_value.process.return_value = (
                     np.zeros(16000, dtype=np.float32),
                     16000,
@@ -54,7 +54,7 @@ class TestPipeline:
         assert isinstance(result, TranscriptionResult)
 
     def test_transcribe_file_not_found(self, mock_pipeline):
-        from ham_radio_stt import AudioProcessingError
+        from ham_to_text import AudioProcessingError
         with pytest.raises(AudioProcessingError, match="not found"):
             mock_pipeline.transcribe_file("/nonexistent/file.wav")
 
@@ -75,7 +75,7 @@ class TestPipeline:
                 call_order.append("stage2")
                 return audio, sr
 
-        with patch("ham_radio_stt.pipeline.WhisperTranscriber") as MockTranscriber:
+        with patch("ham_to_text.pipeline.WhisperTranscriber") as MockTranscriber:
             mock_result = TranscriptionResult(
                 text="test", segments=[], language="en",
                 duration_s=1.0, processing_time_s=0.5,
@@ -84,8 +84,8 @@ class TestPipeline:
             )
             MockTranscriber.return_value.transcribe.return_value = mock_result
 
-            with patch("ham_radio_stt.pipeline.SoxPreprocess", FakeStage1):
-                with patch("ham_radio_stt.pipeline.get_denoiser", return_value=FakeStage2(None)):
+            with patch("ham_to_text.pipeline.SoxPreprocess", FakeStage1):
+                with patch("ham_to_text.pipeline.get_denoiser", return_value=FakeStage2(None)):
                     pipeline = Pipeline(PipelineConfig())
                     pipeline.transcribe_audio(np.zeros(16000, dtype=np.float32), 16000)
 
@@ -94,7 +94,7 @@ class TestPipeline:
 
 class TestProgressiveTranscription:
     def test_transcribe_file_progressive_yields_results(self):
-        with patch("ham_radio_stt.pipeline.WhisperTranscriber") as MockTranscriber:
+        with patch("ham_to_text.pipeline.WhisperTranscriber") as MockTranscriber:
             def make_result(*args, **kwargs):
                 return TranscriptionResult(
                     text="CQ", segments=[{"start": 0.0, "end": 1.0, "text": "CQ"}],
@@ -104,17 +104,17 @@ class TestProgressiveTranscription:
                 )
             MockTranscriber.return_value.transcribe.side_effect = make_result
 
-            with patch("ham_radio_stt.pipeline.SoxPreprocess") as MockSox:
+            with patch("ham_to_text.pipeline.SoxPreprocess") as MockSox:
                 MockSox.return_value.process.return_value = (
                     np.zeros(16000 * 5, dtype=np.float32), 16000,
                 )
                 MockSox.return_value.name = "sox_preprocess"
-                with patch("ham_radio_stt.pipeline.get_denoiser") as MockDenoiser:
+                with patch("ham_to_text.pipeline.get_denoiser") as MockDenoiser:
                     MockDenoiser.return_value.process.return_value = (
                         np.zeros(16000 * 2, dtype=np.float32), 16000,
                     )
                     MockDenoiser.return_value.name = "none"
-                    with patch("ham_radio_stt.pipeline.Pipeline._vad_segment") as mock_vad:
+                    with patch("ham_to_text.pipeline.Pipeline._vad_segment") as mock_vad:
                         mock_vad.return_value = [
                             (0, 16000 * 2),
                             (16000 * 3, 16000 * 5),

@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from ham_radio_stt.config import PipelineConfig
-from ham_radio_stt.transcribe import WhisperTranscriber
-from ham_radio_stt.result import TranscriptionResult
-from ham_radio_stt import ModelLoadError
+from ham_to_text.config import PipelineConfig
+from ham_to_text.transcribe import WhisperTranscriber
+from ham_to_text.result import TranscriptionResult
+from ham_to_text import ModelLoadError
 
 
 class TestWhisperTranscriber:
@@ -23,7 +23,7 @@ class TestWhisperTranscriber:
         mock_info.language = "en"
         mock_info.duration = 3.0
 
-        with patch("ham_radio_stt.transcribe.WhisperModel") as MockModel:
+        with patch("ham_to_text.transcribe.WhisperModel") as MockModel:
             instance = MockModel.return_value
             instance.transcribe.return_value = (iter([mock_segment]), mock_info)
 
@@ -45,7 +45,7 @@ class TestWhisperTranscriber:
         mock_info.language = "en"
         mock_info.duration = 2.0
 
-        with patch("ham_radio_stt.transcribe.WhisperModel") as MockModel:
+        with patch("ham_to_text.transcribe.WhisperModel") as MockModel:
             instance = MockModel.return_value
             instance.transcribe.return_value = (iter([]), mock_info)
 
@@ -57,6 +57,6 @@ class TestWhisperTranscriber:
         assert result.segments == []
 
     def test_model_load_failure_raises(self):
-        with patch("ham_radio_stt.transcribe.WhisperModel", side_effect=Exception("download failed")):
+        with patch("ham_to_text.transcribe.WhisperModel", side_effect=Exception("download failed")):
             with pytest.raises(ModelLoadError, match="download failed"):
                 WhisperTranscriber(PipelineConfig())
